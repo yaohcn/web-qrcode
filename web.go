@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	"encoding/hex"
 	"fmt"
 	"html/template"
 	"log"
@@ -24,18 +24,34 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
 func qrcode(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method) //获取请求的方法
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("qrcode.gtpl")
+		t, _ := template.ParseFiles("qrcode.html")
 		log.Println(t.Execute(w, nil))
 	} else {
-		//请求的是登录数据，那么执行登录的逻辑判断
-		// r.ParseForm()
-		fmt.Println("qrcode:", r.FormValue("qrcode"))
-		buf := bytes.NewBufferString(r.FormValue("qrcode"))
-		fmt.Printf("%d\n", len(buf.Bytes()))
-		fmt.Println(buf.String())
+		var record recordInfo
+		var f qrcodeInfo
+		err := parse(r.FormValue("qrcode"), &record, &f)
+		if err != nil {
+			fmt.Fprintf(w, err.Error())
+		}
+		t, _ := template.ParseFiles("afterParse.html", "qrcode.html")
+		log.Println(t.Execute(w, record))
+		// fmt.Fprintf(w, record.TerminalInfo)
 	}
 }
-func qrcodeParse(qr string) {
+func parse(data string, r *recordInfo, f *qrcodeInfo) error {
+	data_hex, err := hex.DecodeString(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = recordParse(data_hex, r)
+	if err != nil {
+		return err
+	}
+	err = qrcodeParse(r.qrcode, f)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 func main() {
 	http.HandleFunc("/", sayhelloName) //设置访问的路由
