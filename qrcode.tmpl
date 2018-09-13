@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <title>二维码解析</title>
+  </head>
+  <body>
+    协议类型：{{.ProtoType}} <br>
+    二维码版本：{{.Version}} <br>
+    算法版本：{{.AlgoVersion}} <br>
+    密钥ID：{{.KeyId}}  <br>
+    用户ID：{{.UserId}} <br>
+    机构过期时间：{{.AgencyExpTime | timeString}} <br>
+    码有效时间：{{.QrcodeEffectTime}} <br>
+    单笔限额：{{.LimitAmt}} <br>
+    身份信息：{{.IdInfo}} <br>
+    机构编号：{{.AgencyId}} <br>
+    用户公钥：{{.UserPuk | printf "%x"}} <br>
+    卡类型：{{.CardType}} <br>
+    卡号：{{.CardNum}} <br>
+    卡数据：{{.CardData | printf "%x"}} <br>
+    二维码生成时间：{{.QrcodeGeneTime | timeString}} <br>
+  </body>
+</html>

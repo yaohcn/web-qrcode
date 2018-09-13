@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <title>脱机记录解析</title>
+  </head>
+  <body>
+    记录版本: {{.RecordVersion}} <br>
+    原始二维码：<br>
+    {{.Qrcode | printf "%x"}} <br>
+    终端信息：{{.TerminalInfo}} <br>
+    受理时间：{{.RecordTime | timeString}} <br>
+    软件版本：{{.SoftVersion}} <br>
+    签名：{{.Sign | printf "%x"}} <br>
+    ----------------------------------------------------- <br>
+    协议类型：{{.Qr.ProtoType}} <br>
+    二维码版本：{{.Qr.Version}} <br>
+    算法版本：{{.Qr.AlgoVersion}} <br>
+    密钥ID：{{.Qr.KeyId}}  <br>
+    用户ID：{{.Qr.UserId}} <br>
+    机构过期时间：{{.Qr.AgencyExpTime | timeString}} <br>
+    码有效时间：{{.Qr.QrcodeEffectTime}} <br>
+    单笔限额：{{.Qr.LimitAmt}} <br>
+    身份信息：{{.Qr.IdInfo}} <br>
+    机构编号：{{.Qr.AgencyId}} <br>
+    用户公钥：{{.Qr.UserPuk | printf "%x"}} <br>
+    卡类型：{{.Qr.CardType}} <br>
+    卡号：{{.Qr.CardNum}} <br>
+    卡数据：{{.Qr.CardData | printf "%x"}} <br>
+    二维码生成时间：{{.Qr.QrcodeGeneTime | timeString}} <br>
+  </body>
+</html>

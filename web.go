@@ -6,57 +6,64 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"strings"
+    "time"
+    "strings"
 )
 
-func sayhelloName(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()       //解析参数，默认是不会解析的
-	fmt.Println(r.Form) //这些信息是输出到服务器端的打印信息
-	fmt.Println("path", r.URL.Path)
-	fmt.Println("scheme", r.URL.Scheme)
-	fmt.Println(r.Form["url_long"])
-	for k, v := range r.Form {
-		fmt.Println("key:", k)
-		fmt.Println("val:", strings.Join(v, ""))
-	}
-	fmt.Fprintf(w, "Hello astaxie!") //这个写入到w的是输出到客户端的
-}
-func qrcode(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("method:", r.Method) //获取请求的方法
+func parseData(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("qrcode.html")
+		t, _ := template.ParseFiles("submit.html")
 		log.Println(t.Execute(w, nil))
 	} else {
-		var record recordInfo
-		var f qrcodeInfo
-		err := parse(r.FormValue("qrcode"), &record, &f)
-		if err != nil {
+	    data_hex, err := hex.DecodeString(strings.TrimSpace(r.FormValue("data")))
+	    if err != nil {
 			fmt.Fprintf(w, err.Error())
-		}
-		t, _ := template.ParseFiles("afterParse.html", "qrcode.html")
-		log.Println(t.Execute(w, record))
-		// fmt.Fprintf(w, record.TerminalInfo)
+            return
+	    }
+        if data_hex[0] == 0x02 || data_hex[0] == 0x54{
+	        var qr qrcodeInfo
+            err := aliAndOwnQrcodeParse(data_hex, &qr)
+            if err != nil {
+			    fmt.Fprintf(w, err.Error())
+                return
+            }
+            t, _ := template.New("qrcode.tmpl").Funcs(template.FuncMap{"timeString":timeString}).ParseFiles("qrcode.tmpl")
+		    log.Println(t.Execute(w, qr))
+
+        }else if data_hex[0] >= 0x80 {
+            fmt.Fprintf(w, "暂不支持交通部二维码")
+            return
+        }else if (data_hex[0] >> 4) == 2{
+	        var re recordInfo
+            err := aliAndOwnRecordParseV2(data_hex, &re)
+            if err != nil {
+			    fmt.Fprintf(w, err.Error())
+                return
+            }
+            t, _ := template.New("record.tmpl").Funcs(template.FuncMap{"timeString":timeString}).ParseFiles("record.tmpl")
+		    log.Println(t.Execute(w, re))
+        }else if data_hex[0]==0x00 && data_hex[1]==0x00 {
+            fmt.Fprintf(w, "暂不支持交通部record")
+            return
+        }else {
+	        var re recordInfo
+            err := aliRecordParseV1(data_hex, &re)
+            if err != nil {
+			    fmt.Fprintf(w, err.Error())
+                return
+            }
+            t, _ := template.New("record.tmpl").Funcs(template.FuncMap{"timeString":timeString}).ParseFiles("record.tmpl")
+		    log.Println(t.Execute(w, re))
+        }
 	}
 }
-func parse(data string, r *recordInfo, f *qrcodeInfo) error {
-	data_hex, err := hex.DecodeString(data)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = recordParse(data_hex, r)
-	if err != nil {
-		return err
-	}
-	err = qrcodeParse(r.qrcode, f)
-	if err != nil {
-		return err
-	}
-	return nil
+func timeString(unixtamp uint32) string {
+	  return time.Unix(int64(unixtamp), 0).Format("2006-01-02 15:04:05")
 }
 func main() {
-	http.HandleFunc("/", sayhelloName) //设置访问的路由
-	http.HandleFunc("/qrcode", qrcode)
-	err := http.ListenAndServe(":9090", nil) //设置监听的端口
+	http.HandleFunc("/", parseData)
+	err := http.ListenAndServe(":9090", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
