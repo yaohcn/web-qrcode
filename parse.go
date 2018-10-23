@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"crypto/hmac"
+	"crypto/md5"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 )
+
 type qrcodeInfo struct {
 	ProtoType   string
 	SourceId    byte
@@ -37,10 +41,37 @@ type recordInfo struct {
 	TerminalInfo  string
 	RecordTime    uint32
 	SoftVersion   string
-	Sign          []byte
-    Qr qrcodeInfo
+	Sign          bool
+	Qr            qrcodeInfo
+}
+type motQrcodeInfo struct {
+}
+type motRecordInfo struct {
+	Version         byte
+	Qrcode          []byte
+	PosMfId         string
+	PosId           string
+	PosSwVersion    string
+	RecordId        string
+	MerchantType    string
+	ConsumptionType byte
+	Currency        string
+	Amount          uint32
+	VehicleId       string
+	PlateNo         string
+	DriverId        string
+	LineInfo        string
+	StationNo       string
+	LbsInfo         string
+	RecordTime      uint32
+	Sign            bool
+
+	Qr motQrcodeInfo
 }
 
+func motRecordParse(r []byte, t *motRecordInfo) error {
+	return nil
+}
 func aliAndOwnRecordParseV2(r []byte, t *recordInfo) error {
 	var i int
 
@@ -48,9 +79,9 @@ func aliAndOwnRecordParseV2(r []byte, t *recordInfo) error {
 	recordLen := (uint16(r[i]&0x0F)<<8 | uint16(r[i+1]))
 	i += 2
 
-    if recordLen != uint16(len(r)-2) {
-        return errors.New("record len wrong")
-    }
+	if recordLen != uint16(len(r)-2) {
+		return errors.New("record len wrong")
+	}
 
 	qrcodeLen := int(binary.BigEndian.Uint16(r[i : i+2]))
 	i += 2
@@ -70,46 +101,60 @@ func aliAndOwnRecordParseV2(r []byte, t *recordInfo) error {
 	i += 2
 	t.SoftVersion = string(r[i : i+softVersionLen])
 	i += softVersionLen
+	message := r[:i]
 	signLen := int(binary.BigEndian.Uint16(r[i : i+2]))
 	i += 2
-	t.Sign = r[i : i+signLen]
+	messageMAC := r[i : i+signLen]
 	i += signLen
 
 	if recordLen != uint16(i-2) {
 		return errors.New("record len wrong")
 	}
-    err := aliAndOwnQrcodeParse(t.Qrcode, &(t.Qr))
-    if err != nil {
-        return err
-    }
+	err := aliAndOwnQrcodeParse(t.Qrcode, &(t.Qr))
+	if err != nil {
+		return err
+	}
+	t.Sign = checkMAC(message, messageMAC, []byte(t.Qr.UserId))
 	return nil
 }
+func checkMAC(message, messageMAC, key []byte) bool {
+	mac := hmac.New(md5.New, key)
+	mac.Write(message)
+	expectedMAC := mac.Sum(nil)
+	return hmac.Equal(messageMAC, expectedMAC)
+}
 func aliAndOwnQrcodeParse(qr []byte, f *qrcodeInfo) error {
-    if qr[0] == 0x02 {
-        f.ProtoType = "支付宝"
-        err := aliQrcodeParse(qr, f)
-        if err != nil {
-            return err
-        }
-    }else {
-        f.ProtoType = "自有码"
-        err := aliQrcodeParse(qr[2:], f)
-        if err != nil {
-            return err
-        }
-    }
-    return nil
+	if qr[0] == 0x02 {
+		f.ProtoType = "支付宝"
+		err := aliQrcodeParse(qr, f)
+		if err != nil {
+			return err
+		}
+	} else {
+		f.ProtoType = "自有码"
+		err := aliQrcodeParse(qr[2:], f)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 func aliQrcodeParse(qr []byte, f *qrcodeInfo) error {
 	var i int
 	f.Version = qr[i]
 	i += 1
+	if f.Version != 0x02 {
+		return errors.New("original qrcode version is not 0x02")
+	}
 	f.AlgoVersion = qr[i]
 	i += 1
 	f.KeyId = qr[i]
 	i += 1
 	agencyDataLen := int(qr[i])
 	i += 1
+	if agencyDataLen > len(qr) {
+		return errors.New("qrcode len wrong")
+	}
 	f.UserId = string(qr[i : i+16])
 	i += 16
 	f.AgencyExpTime = binary.BigEndian.Uint32(qr[i : i+4])
@@ -178,9 +223,10 @@ func aliRecordParseV1(r []byte, t *recordInfo) error {
 	t.TerminalInfo = string(r[i : i+terminalInfoLen])
 	i += terminalInfoLen
 
+	message := r[:i]
 	signLen := int(binary.BigEndian.Uint16(r[i : i+2]))
 	i += 2
-	t.Sign = r[i : i+signLen]
+	messageMAC := r[i : i+signLen]
 	i += signLen
 
 	timeLen := int(binary.BigEndian.Uint16(r[i : i+2]))
@@ -191,9 +237,21 @@ func aliRecordParseV1(r []byte, t *recordInfo) error {
 	if len(r) != i {
 		return errors.New("record len wrong")
 	}
-    err := aliAndOwnQrcodeParse(t.Qrcode, &(t.Qr))
-    if err != nil {
-        return err
-    }
+	err := aliAndOwnQrcodeParse(t.Qrcode, &(t.Qr))
+	if err != nil {
+		return err
+	}
+	t.Sign = checkMD5(message, messageMAC)
 	return nil
+}
+func checkMD5(message, messageMAC []byte) bool {
+	mac := md5.New()
+	mac.Write(message)
+	expectedMAC := mac.Sum(nil)
+
+	i := bytes.Compare(messageMAC, expectedMAC)
+	if i == 0 {
+		return true
+	}
+	return false
 }
