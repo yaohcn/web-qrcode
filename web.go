@@ -67,7 +67,7 @@ func timeString(unixtamp uint32) string {
 }
 func main() {
 	http.HandleFunc("/", parseData)
-	err := http.ListenAndServe(":9090", nil)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

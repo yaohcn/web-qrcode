@@ -126,17 +126,87 @@ func checkMAC(message, messageMAC, key []byte) bool {
 func aliAndOwnQrcodeParse(qr []byte, f *qrcodeInfo) error {
 	if qr[0] == 0x02 {
 		f.ProtoType = "支付宝"
-		err := aliQrcodeParse(qr, f)
+		err := aliQrcodeParse2(qr, f)
 		if err != nil {
 			return err
 		}
 	} else {
 		f.ProtoType = "自有码"
-		err := aliQrcodeParse(qr[2:], f)
+		err := aliQrcodeParse2(qr[2:], f)
 		if err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+//利用bytes.buffer重构aliQrcodeParse
+func aliQrcodeParse2(qr []byte, f *qrcodeInfo) error {
+	var err error
+	buf := bytes.NewBuffer(qr)
+	f.Version, err = buf.ReadByte()
+	if err != nil {
+		return errors.New("ReadByte error!")
+	}
+	if f.Version != 0x02 {
+		return errors.New("original qrcode version is not 0x02")
+	}
+	f.AlgoVersion, err = buf.ReadByte()
+	if err != nil {
+		return errors.New("ReadByte error!")
+	}
+	f.KeyId, err = buf.ReadByte()
+	if err != nil {
+		return errors.New("ReadByte error!")
+	}
+	agencyDataLen, err := buf.ReadByte()
+	if err != nil {
+		return errors.New("ReadByte error!")
+	}
+	if int(agencyDataLen) > len(qr) {
+		return errors.New("qrcode len wrong")
+	}
+	f.UserId = string(buf.Next(16))
+	f.AgencyExpTime = binary.BigEndian.Uint32(buf.Next(4))
+	f.QrcodeEffectTime = binary.BigEndian.Uint16(buf.Next(2))
+	f.LimitAmt = binary.BigEndian.Uint16(buf.Next(2))
+	f.IdInfo = hex.EncodeToString(buf.Next(4))
+	f.AgencyId = hex.EncodeToString(buf.Next(4))
+	f.Reserve = buf.Next(4)
+
+	f.UserPuk = buf.Next(25)
+	f.CardType = string(buf.Next(8))
+	cardNumLen, err := buf.ReadByte()
+	if err != nil {
+		return errors.New("ReadByte error!")
+	}
+	f.CardNum = string(buf.Next(int(cardNumLen)))
+	cardDataLen, err := buf.ReadByte()
+	if err != nil {
+		return errors.New("ReadByte error!")
+	}
+	f.CardData = buf.Next(int(cardDataLen))
+
+	agencySigLen, err := buf.ReadByte()
+	if err != nil {
+		return errors.New("ReadByte error!")
+	}
+	f.AgencySig = buf.Next(int(agencySigLen))
+
+	userDataLen, err := buf.ReadByte()
+	if err != nil {
+		return errors.New("ReadByte error!")
+	}
+	if int(userDataLen) != 4 {
+		return errors.New("user data len wrong")
+	}
+	f.QrcodeGeneTime = binary.BigEndian.Uint32(buf.Next(4))
+	userSigLen, err := buf.ReadByte()
+	if err != nil {
+		return errors.New("ReadByte error!")
+	}
+	f.UserSig = buf.Next(int(userSigLen))
+
 	return nil
 }
 func aliQrcodeParse(qr []byte, f *qrcodeInfo) error {
