@@ -72,6 +72,41 @@ type motRecordInfo struct {
 func motRecordParse(r []byte, t *motRecordInfo) error {
 	return nil
 }
+func aliAndOwnRecordParseV1(r []byte, t *recordInfo) error {
+	var i int
+
+	t.RecordVersion = r[i] >> 4
+	qrcodeLen := (uint16(r[i]&0x0F)<<8 | uint16(r[i+1]))
+	i += 2
+
+	t.Qrcode = r[i : i+int(qrcodeLen)]
+	i += int(qrcodeLen)
+	terminalInfoLen := int(binary.BigEndian.Uint16(r[i : i+2]))
+	i += 2
+	t.TerminalInfo = string(r[i : i+terminalInfoLen])
+	i += terminalInfoLen
+
+	timeLen := int(binary.BigEndian.Uint16(r[i : i+2]))
+	i += 2
+	t.RecordTime = binary.BigEndian.Uint32(r[i : i+timeLen])
+	i += timeLen
+
+	message := r[:i]
+	signLen := int(binary.BigEndian.Uint16(r[i : i+2]))
+	i += 2
+	messageMAC := r[i : i+signLen]
+	i += signLen
+
+	if len(r) != i {
+		return errors.New("record len wrong22")
+	}
+	err := aliAndOwnQrcodeParse(t.Qrcode, &(t.Qr))
+	if err != nil {
+		return err
+	}
+	t.Sign = checkMD5(message, messageMAC)
+	return nil
+}
 func aliAndOwnRecordParseV2(r []byte, t *recordInfo) error {
 	var i int
 
@@ -126,13 +161,13 @@ func checkMAC(message, messageMAC, key []byte) bool {
 func aliAndOwnQrcodeParse(qr []byte, f *qrcodeInfo) error {
 	if qr[0] == 0x02 {
 		f.ProtoType = "支付宝"
-		err := aliQrcodeParse2(qr, f)
+		err := aliQrcodeParse(qr, f)
 		if err != nil {
 			return err
 		}
 	} else {
 		f.ProtoType = "自有码"
-		err := aliQrcodeParse2(qr[2:], f)
+		err := aliQrcodeParse(qr[2:], f)
 		if err != nil {
 			return err
 		}

@@ -163,6 +163,15 @@ func parseData(w http.ResponseWriter, r *http.Request) {
 			}
 			t, _ := template.New("record.tmpl").Funcs(template.FuncMap{"timeString": timeString}).ParseFiles("record.tmpl")
 			log.Println(t.Execute(w, re))
+		} else if (data_hex[0] >> 4) == 1 {
+			var re recordInfo
+			err := aliAndOwnRecordParseV1(data_hex, &re)
+			if err != nil {
+				fmt.Fprintf(w, err.Error())
+				return
+			}
+			t, _ := template.New("record.tmpl").Funcs(template.FuncMap{"timeString": timeString}).ParseFiles("record.tmpl")
+			log.Println(t.Execute(w, re))
 		} else if data_hex[0] == 0x00 && data_hex[1] == 0x00 {
 			fmt.Fprintf(w, "暂不支持交通部record")
 			return
