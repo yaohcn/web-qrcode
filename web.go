@@ -2,14 +2,27 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 )
 
+type conf struct {
+	Addr string
+}
+
+func loadConf(c *conf) error {
+	data, err := ioutil.ReadFile("./config.json")
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, c)
+}
 func parseData(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
@@ -75,8 +88,15 @@ func timeString(unixtamp uint32) string {
 	return time.Unix(int64(unixtamp), 0).Format("2006-01-02 15:04:05")
 }
 func main() {
+	var c conf
+
+	err := loadConf(&c)
+	if err != nil {
+		log.Fatal("loadConf: ", err)
+	}
+
 	http.HandleFunc("/", parseData)
-	err := http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(c.Addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
