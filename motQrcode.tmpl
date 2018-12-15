@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <title>交通部二维码</title>
+  </head>
+  <body>
+    二维码版本：{{.Version | printf "%x" }} <br>
+    发卡机构公钥证书：{{.CardPukCA | printf "%x"}} <br>
+    支付账户号：{{.PayAccountNo}}  <br>
+    用户账户号：{{.UserAccountNo | printf "%x"}} <br>
+    发卡机构代码：{{.CardIssuerNo | printf "%x"}} <br>
+    发码机构代码：{{.CodeIssuerNo | printf "%x"}} <br>
+    用户账户类型：{{.UserAccountType}} <br>
+    单次消费金额上限：{{.LimitAmt}} <br>
+    支付账户用户公钥：{{.UserPuk | printf "%x"}} <br>
+    支付账户系统授权过期时间：{{.AuthorizeTime | timeString}} <br>
+    二维码有效时间：{{.QrcodeEffectTime}} <br>
+    发卡机构自定义域：{{.Customize | printf "%x"}} <br>
+    发卡机构授权签名：{{.IssuerSign | printf "%x"}} <br>
+    二维码生成时间：{{.QrcodeGeneTime | timeString}} <br>
+    支付账户用户私钥签名：{{.UserSign | printf "%x"}} <br>
+    ----------------------------------------------------- <br>
+    发卡机构公钥证书 <br>
+    记录头：{{.Puk.Head | printf "%x"}} <br>
+    服务标识：{{.Puk.ServiceMark | printf "%x"}} <br>
+    中心CA公钥索引：{{.Puk.CaIndex | printf "%02x"}} <br>
+    证书格式：{{.Puk.CaFormat | printf "%x"}} <br>
+    发卡机构标识：{{.Puk.CardIssuerMark | printf "%x"}} <br>
+    证书实效日期：{{.Puk.FailDate |printf "%x"}} <br>
+    证书序列号：{{.Puk.SerialNo | printf "%x"}} <br>
+    发卡机构公钥签名算法标识：{{.Puk.SignMark | printf "%02x"}} <br>
+    发卡机构公钥加密算法标识：{{.Puk.CryptoMark | printf "02%x"}} <br>
+    发卡机构公钥参数标识：{{.Puk.PukParamMark | printf "02%x"}} <br>
+    发卡机构公钥长度：{{.Puk.PukLen}} <br>
+    发卡机构公钥：{{.Puk.PubKey | printf "%x"}} <br>
+    数字签名：{{.Puk.Sign | printf "%x"}} <br>
+  </body>
+</html>

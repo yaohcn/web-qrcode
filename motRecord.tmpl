@@ -1,0 +1,57 @@
+<html>
+  <head>
+    <title>交通部脱机记录</title>
+  </head>
+  <body>
+    记录版本：{{.Version | printf "%x"}} <br>
+    二维码：{{.Qrcode | printf "%x"}} <br>
+    受理终端厂商编号：{{.PosMfId}} <br>
+    受理终端编号：{{.PosId}} <br>
+    受理终端软件版本：{{.PosSwVersion}} <br>
+    受理终端流水号：{{.RecordId}} <br>
+    商户类型：{{.MerchantType}} <br>
+    消费类型：{{.ConsumptionType | printf "%x"}} <br>
+    币种：{{.Currency}} <br>
+    消费金额：{{.Amount}} <br>
+    车辆编号：{{.VehicleId}} <br>
+    车牌号：{{.PlateNo}} <br>
+    驾驶员编号：{{.DriverId}} <br>
+    线路信息：{{.LineInfo}} <br>
+    站点编号：{{.StationNo}} <br>
+    经纬度：{{.LbsInfo}} <br>
+    受理终端时间：{{.RecordTime | timeString}} <br>
+    完整性签名：{{.Sign | printf "%x"}} <br>
+    ----------------------------------------------------- <br>
+    原始二维码协议: {{.ProtoType}} <br>
+    二维码版本：{{.MotQr.Version | printf "%x" }} <br>
+    发卡机构公钥证书：{{.MotQr.CardPukCA | printf "%x"}} <br>
+    支付账户号：{{.MotQr.PayAccountNo}}  <br>
+    用户账户号：{{.MotQr.UserAccountNo | printf "%x"}} <br>
+    发卡机构代码：{{.MotQr.CardIssuerNo | printf "%x"}} <br>
+    发码机构代码：{{.MotQr.CodeIssuerNo | printf "%x"}} <br>
+    用户账户类型：{{.MotQr.UserAccountType}} <br>
+    单次消费金额上限：{{.MotQr.LimitAmt}} <br>
+    支付账户用户公钥：{{.MotQr.UserPuk | printf "%x"}} <br>
+    支付账户系统授权过期时间：{{.MotQr.AuthorizeTime | timeString}} <br>
+    二维码有效时间：{{.MotQr.QrcodeEffectTime}} <br>
+    发卡机构自定义域：{{.MotQr.Customize | printf "%x"}} <br>
+    发卡机构授权签名：{{.MotQr.IssuerSign | printf "%x"}} <br>
+    二维码生成时间：{{.MotQr.QrcodeGeneTime | timeString}} <br>
+    支付账户用户私钥签名：{{.MotQr.UserSign | printf "%x"}} <br>
+    ----------------------------------------------------- <br>
+    发卡机构公钥证书 <br>
+    记录头：{{.MotQr.Puk.Head | printf "%x"}} <br>
+    服务标识：{{.MotQr.Puk.ServiceMark | printf "%x"}} <br>
+    中心CA公钥索引：{{.MotQr.Puk.CaIndex | printf "%02x"}} <br>
+    证书格式：{{.MotQr.Puk.CaFormat | printf "%x"}} <br>
+    发卡机构标识：{{.MotQr.Puk.CardIssuerMark | printf "%x"}} <br>
+    证书实效日期：{{.MotQr.Puk.FailDate |printf "%x"}} <br>
+    证书序列号：{{.MotQr.Puk.SerialNo | printf "%x"}} <br>
+    发卡机构公钥签名算法标识：{{.MotQr.Puk.SignMark | printf "%02x"}} <br>
+    发卡机构公钥加密算法标识：{{.MotQr.Puk.CryptoMark | printf "%02x"}} <br>
+    发卡机构公钥参数标识：{{.MotQr.Puk.PukParamMark | printf "%02x"}} <br>
+    发卡机构公钥长度：{{.MotQr.Puk.PukLen}} <br>
+    发卡机构公钥：{{.MotQr.Puk.PubKey | printf "%x"}} <br>
+    数字签名：{{.MotQr.Puk.Sign | printf "%x"}} <br>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <title>支付宝脱机记录V3</title>
+  </head>
+  <body>
+    记录版本：{{.Version | printf "%x"}} <br>
+    二维码：{{.Qrcode | printf "%x"}} <br>
+    受理终端厂商编号：{{.PosMfId}} <br>
+    受理终端编号：{{.PosId}} <br>
+    受理终端软件版本：{{.PosSwVersion}} <br>
+    受理终端流水号：{{.RecordId}} <br>
+    商户类型：{{.MerchantType}} <br>
+    消费类型：{{.ConsumptionType | printf "%x"}} <br>
+    币种：{{.Currency}} <br>
+    消费金额：{{.Amount}} <br>
+    车辆编号：{{.VehicleId}} <br>
+    车牌号：{{.PlateNo}} <br>
+    驾驶员编号：{{.DriverId}} <br>
+    线路信息：{{.LineInfo}} <br>
+    站点编号：{{.StationNo}} <br>
+    经纬度：{{.LbsInfo}} <br>
+    受理终端时间：{{.RecordTime | timeString}} <br>
+    完整性签名：{{.Sign | printf "%x"}} <br>
+    脱机记录类型：{{.RecordType}} <br>
+    ----------------------------------------------------- <br>
+    原始二维码协议: {{.ProtoType}} <br>
+    二维码版本：{{.AliQr.Version}} <br>
+    算法版本：{{.AliQr.AlgoVersion}} <br>
+    密钥ID：{{.AliQr.KeyId}}  <br>
+    用户ID：{{.AliQr.UserId}} <br>
+    机构过期时间：{{.AliQr.AgencyExpTime | timeString}} <br>
+    码有效时间：{{.AliQr.QrcodeEffectTime}} <br>
+    单笔限额：{{.AliQr.LimitAmt}} <br>
+    身份信息：{{.AliQr.IdInfo}} <br>
+    机构编号：{{.AliQr.AgencyId}} <br>
+    用户公钥：{{.AliQr.UserPuk | printf "%x"}} <br>
+    卡类型：{{.AliQr.CardType}} <br>
+    卡号：{{.AliQr.CardNum}} <br>
+    卡数据：{{.AliQr.CardData | printf "%x"}} <br>
+    二维码生成时间：{{.AliQr.QrcodeGeneTime | timeString}} <br>
+  </body>
+</html>
